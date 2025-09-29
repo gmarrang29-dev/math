@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 원근 투영 시뮬레이터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js 라이브러리 로드 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- OrbitControls 및 DragControls 로드 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/DragControls.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+        canvas { display: block; }
+        #info-panel { 
+            transition: transform 0.3s ease-in-out; 
+            /* 토글 문제 해결을 위해 초기 상태를 명시적으로 설정 */
+            transform: translateX(0); 
+        }
+        .glowing { text-shadow: 0 0 5px #00FFFF, 0 0 10px #00FFFF; }
+        /* input 필드 스타일링 */
+        input[type="number"] {
+            background-color: #1f2937;
+            border: 1px solid #374151;
+            color: #d1d5db;
+            padding: 4px 8px;
+            border-radius: 4px;
+            width: 80px;
+            text-align: center;
+        }
+        /* 축 숫자 레이블 스타일 */
+        .axis-label {
+            position: absolute;
+            font-size: 10px;
+            color: #ccc;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 4px;
+            border-radius: 3px;
+            pointer-events: none; /* 클릭 이벤트 무시 */
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gray-900">
+    <div id="container" class="w-full h-screen relative">
+        <!-- 정보 및 컨트롤 패널 -->
+        <div id="info-panel" class="fixed top-4 right-4 p-5 rounded-xl shadow-2xl bg-gray-800/95 backdrop-blur-sm z-10 w-96 border-t-4 border-sky-500 text-white">
+            <h1 class="text-2xl font-extrabold text-sky-400 mb-3 border-b border-gray-700 pb-2">🎯 3D 투영 분석 시뮬레이터</h1>
+            
+            <!-- 버튼 그룹 -->
+            <div class="flex space-x-2 mb-4">
+                <button id="toggle-panel-btn" class="flex-1 py-2 px-3 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-700 transition-colors shadow-md text-sm">
+                    패널 숨기기
+                </button>
+                <button id="reset-view-btn" class="flex-1 py-2 px-3 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors shadow-md text-sm">
+                    뷰 초기화
+                </button>
+            </div>
+            <div class="mb-4">
+                <button id="toggle-grid-btn" class="w-full py-2 px-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors shadow-md text-sm">
+                    격자 숨기기
+                </button>
+            </div>
+
+            <!-- 카메라 C 좌표 입력 -->
+            <div class="mb-4 p-3 bg-gray-700/50 rounded-lg">
+                <p class="font-bold text-lg text-red-400 mb-2">카메라 $C$ 좌표 수동 입력:</p>
+                <div class="flex justify-between items-center text-sm">
+                    <label>X: <input type="number" id="input-c-x" value="5"></label>
+                    <label>Y: <input type="number" id="input-c-y" value="0"></label>
+                    <label>Z: <input type="number" id="input-c-z" value="0"></label>
+                    <button id="apply-c-coords-btn" class="py-1 px-3 bg-red-500 text-white rounded-md hover:bg-red-600">적용</button>
+                </div>
+            </div>
+
+            <!-- 물체 P 좌표 입력 -->
+            <div class="mb-4 p-3 bg-gray-700/50 rounded-lg">
+                <p class="font-bold text-lg text-blue-400 mb-2">물체 $P$ 좌표 수동 입력:</p>
+                <div class="flex justify-between items-center text-sm">
+                    <label>X: <input type="number" id="input-x" value="15"></label>
+                    <label>Y: <input type="number" id="input-y" value="10"></label>
+                    <label>Z: <input type="number" id="input-z" value="5"></label>
+                    <button id="apply-coords-btn" class="py-1 px-3 bg-blue-500 text-white rounded-md hover:bg-blue-600">적용</button>
+                </div>
+            </div>
+
+            <!-- 수학 결과 패널 -->
+            <div id="math-results" class="space-y-3 p-3 border border-sky-600 rounded-lg bg-gray-900">
+                
+                <p class="font-semibold text-gray-300">1. 카메라 $C$의 현재 3D 좌표: <span id="camera-coords" class="font-mono text-red-400"></span></p>
+                <p class="font-semibold text-gray-300">2. 물체 $P$의 현재 3D 좌표: <span id="point-coords" class="font-mono text-blue-400"></span></p>
+                
+                <div class="border-t border-gray-700 pt-3">
+                    <p class="font-bold text-lg text-green-400">3. 계산된 $\mathbf{t}$ 값 (<span class="text-sm font-normal text-green-300">거리 비율</span>):</p>
+                    <p class="font-mono text-3xl text-green-400 glowing" id="t-value">0.00</p>
+                </div>
+                
+                <div class="border-t border-gray-700 pt-3">
+                    <p class="font-bold text-lg text-gray-300">4. 투영점 $P_s$의 최종 2D 좌표 (<span class="text-sm font-normal text-gray-400">화면 위치</span>):</p>
+                    <p class="font-mono text-xl text-white glowing" id="projected-coords">(0.00, 0.00)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 범례 -->
+        <div class="fixed bottom-4 left-4 z-20 p-3 bg-gray-800/80 rounded-lg text-white text-sm">
+            <p class="font-bold text-sky-400 mb-1">▪️ 3D 요소 범례</p>
+            <ul class="space-y-0.5">
+                <li><span class="text-red-400 font-bold">●</span> 카메라 $C$</li>
+                <li><span class="text-blue-400 font-bold">●</span> 물체 $P$ (드래그/입력 가능)</li>
+                <li><span class="text-yellow-400 font-bold">■</span> 화면 평면 ($x+z=10$)</li>
+                <li><span class="text-white glowing font-bold">●</span> 투영점 $P_s$ (교점)</li>
+                <li><span class="text-cyan-400 font-bold">—</span> 시선</li>
+            </ul>
+        </div>
+        
+        <!-- 좌표 레이블 컨테이너 -->
+        <div id="label-container" class="absolute inset-0 pointer-events-none"></div>
+    </div>
+
+    <script>
+        // --- 1. Three.js 기본 설정 및 변수 ---
+        let scene, camera, renderer, controls, dragControls;
+        const container = document.getElementById('container');
+        const initialCameraPosition = new THREE.Vector3(20, 15, 20); 
+        
+        // C: 카메라 좌표 (let으로 변경하여 제어 가능하게 함)
+        let cameraCoords = new THREE.Vector3(5, 0, 0); 
+
+        // Screen Plane Equation: x + 0y + z - 10 = 0
+        const planeCoeff = { a: 1, b: 0, c: 1, d: -10 }; 
+        
+        const gridSize = 50;
+        const divisions = 10; // 5단위 간격
+
+        let pointP, pointPs, line, cameraC;
+        let gridHelperXZ, gridHelperXY, gridHelperYZ;
+        let axisLabels = [];
+        
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1a);
+
+            camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.copy(initialCameraPosition);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(renderer.domElement);
+
+            // OrbitControls setup: 뷰 회전/이동 전용
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.mouseButtons = {
+                LEFT: THREE.MOUSE.ROTATE,
+                MIDDLE: THREE.MOUSE.DOLLY,
+                RIGHT: THREE.MOUSE.PAN
+            };
+            
+            // Lighting
+            scene.add(new THREE.AmbientLight(0x404040, 3)); 
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+            directionalLight.position.set(20, 30, 10);
+            scene.add(directionalLight);
+            
+            // --- 2. 3D Environment Components ---
+            
+            // 2.1. True 3D Grid Helpers 
+            const majorColor = 0x444444;
+
+            gridHelperXZ = new THREE.GridHelper(gridSize, divisions, majorColor, majorColor);
+            scene.add(gridHelperXZ);
+
+            gridHelperXY = new THREE.GridHelper(gridSize, divisions, majorColor, majorColor);
+            gridHelperXY.rotation.x = Math.PI / 2;
+            scene.add(gridHelperXY);
+
+            gridHelperYZ = new THREE.GridHelper(gridSize, divisions, majorColor, majorColor);
+            gridHelperYZ.rotation.z = Math.PI / 2;
+            scene.add(gridHelperYZ);
+            
+            // AxesHelper
+            scene.add(new THREE.AxesHelper(30)); 
+            
+            // Add Axis Labels (5 unit spacing)
+            createAxisLabels();
+
+            // 2.2. Camera C (Red)
+            const cameraGeometry = new THREE.SphereGeometry(0.7, 32, 32);
+            const cameraMaterial = new THREE.MeshLambertMaterial({ color: 0xf87171, emissive: 0xf87171, emissiveIntensity: 0.5 });
+            cameraC = new THREE.Mesh(cameraGeometry, cameraMaterial);
+            cameraC.position.copy(cameraCoords);
+            scene.add(cameraC);
+
+            // 2.3. Screen Plane (Yellow, $x+z=10$)
+            const planeGeometry = new THREE.PlaneGeometry(35, 35);
+            const planeMaterial = new THREE.MeshBasicMaterial({ color: 0xfacc15, side: THREE.DoubleSide, transparent: true, opacity: 0.2, emissive: 0xfacc15, emissiveIntensity: 0.1 });
+            const screenPlane = new THREE.Mesh(planeGeometry, planeMaterial);
+            screenPlane.rotation.x = Math.PI / 2;
+            screenPlane.rotateOnAxis(new THREE.Vector3(0, 1, 0).normalize(), Math.PI / 4); 
+            screenPlane.position.set(5, 0, 5); 
+            scene.add(screenPlane);
+
+            // 2.4. Object P (Blue, Draggable)
+            const pointGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+            const pointMaterial = new THREE.MeshLambertMaterial({ color: 0x3b82f6, emissive: 0x3b82f6, emissiveIntensity: 0.3 });
+            pointP = new THREE.Mesh(pointGeometry, pointMaterial);
+            const initialX = parseFloat(document.getElementById('input-x').value);
+            const initialY = parseFloat(document.getElementById('input-y').value);
+            const initialZ = parseFloat(document.getElementById('input-z').value);
+            pointP.position.set(initialX, initialY, initialZ);
+            scene.add(pointP);
+
+            // 2.5. Projected Point Ps (White, Neon Effect)
+            const projectedGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            const projectedMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1.5 });
+            pointPs = new THREE.Mesh(projectedGeometry, projectedMaterial);
+            scene.add(pointPs);
+
+            // 2.6. Line of Sight (Cyan Line)
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x00FFFF, linewidth: 2 }); 
+            const points = [cameraCoords.clone(), pointP.position.clone()];
+            const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+            line = new THREE.Line(lineGeometry, lineMaterial);
+            scene.add(line);
+
+            // --- 3. Controls and Events Setup ---
+            
+            // DragControls for Object P
+            const draggableObjects = [pointP];
+            dragControls = new THREE.DragControls(draggableObjects, camera, renderer.domElement);
+            
+            dragControls.addEventListener('drag', function (event) {
+                // Keep object P within reasonable bounds
+                event.object.position.z = Math.min(30, Math.max(-5, event.object.position.z));
+                event.object.position.x = Math.min(30, Math.max(-10, event.object.position.x));
+                event.object.position.y = Math.min(20, Math.max(-10, event.object.position.y));
+
+                updateProjection(true);
+            });
+
+            // Button Events
+            document.getElementById('reset-view-btn').addEventListener('click', resetView);
+            document.getElementById('toggle-panel-btn').addEventListener('click', togglePanel);
+            document.getElementById('toggle-grid-btn').addEventListener('click', toggleGrid);
+            
+            // Handler for Object P coordinate input
+            const applyPCoords = () => {
+                const x = parseFloat(document.getElementById('input-x').value);
+                const y = parseFloat(document.getElementById('input-y').value);
+                const z = parseFloat(document.getElementById('input-z').value);
+                
+                if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+                    pointP.position.set(x, y, z);
+                    updateProjection();
+                }
+            };
+            document.getElementById('apply-coords-btn').addEventListener('click', applyPCoords);
+            ['input-x', 'input-y', 'input-z'].forEach(id => {
+                document.getElementById(id).addEventListener('keypress', function(e) { if (e.key === 'Enter') applyPCoords(); });
+            });
+            
+            // Handler for Camera C coordinate input
+            const applyCCoords = () => {
+                const x = parseFloat(document.getElementById('input-c-x').value);
+                const y = parseFloat(document.getElementById('input-c-y').value);
+                const z = parseFloat(document.getElementById('input-c-z').value);
+                
+                if (!isNaN(x) && !isNaN(y) && !isNaN(z)) {
+                    cameraCoords.set(x, y, z);
+                    cameraC.position.copy(cameraCoords);
+                    
+                    // After moving the camera, update the controls target to the new camera position
+                    // This is important for "LookAt" logic if we were implementing that, but here we just update projection.
+                    
+                    updateProjection();
+                    // Optional: Reset view to look at the center of the scene from the new camera position
+                    // controls.target.set(cameraCoords.x + 5, cameraCoords.y, cameraCoords.z + 5); 
+                    // controls.update();
+                }
+            };
+            document.getElementById('apply-c-coords-btn').addEventListener('click', applyCCoords);
+            ['input-c-x', 'input-c-y', 'input-c-z'].forEach(id => {
+                document.getElementById(id).addEventListener('keypress', function(e) { if (e.key === 'Enter') applyCCoords(); });
+            });
+
+
+            resetView(); 
+            updateProjection();
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        // --- 4. Function Definitions ---
+        
+        function createAxisLabels() {
+            const step = 5;
+            const limit = 20;
+            const container = document.getElementById('label-container');
+
+            axisLabels.forEach(label => container.removeChild(label));
+            axisLabels = [];
+
+            const addLabel = (position, text) => {
+                const label = document.createElement('div');
+                label.className = 'axis-label';
+                label.textContent = text;
+                container.appendChild(label);
+                axisLabels.push(label);
+                label.userData = { position: position }; // Store 3D position
+            };
+
+            // X-Axis
+            for (let i = -limit; i <= limit; i += step) {
+                if (i === 0) continue;
+                addLabel(new THREE.Vector3(i, 0, 0), `X: ${i}`);
+            }
+
+            // Y-Axis
+            for (let i = -limit; i <= limit; i += step) {
+                if (i === 0) continue;
+                addLabel(new THREE.Vector3(0, i, 0), `Y: ${i}`);
+            }
+
+            // Z-Axis
+            for (let i = -limit; i <= limit; i += step) {
+                if (i === 0) continue;
+                addLabel(new THREE.Vector3(0, 0, i), `Z: ${i}`);
+            }
+        }
+
+        const tempVector = new THREE.Vector3();
+        function updateAxisLabels() {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const isGridVisible = gridHelperXZ.visible;
+
+            axisLabels.forEach(label => {
+                // Get 3D position
+                tempVector.copy(label.userData.position);
+                
+                // Project 3D coordinate to 2D screen coordinate
+                tempVector.project(camera);
+
+                // Convert normalized device coordinates to pixel coordinates
+                const x = (tempVector.x * 0.5 + 0.5) * width;
+                const y = (tempVector.y * -0.5 + 0.5) * height;
+
+                // Position the HTML label
+                label.style.left = `${x}px`;
+                label.style.top = `${y}px`;
+
+                // Display logic: show only if grid is visible AND not behind camera
+                const shouldDisplay = isGridVisible && tempVector.z < 1;
+                label.style.display = shouldDisplay ? 'block' : 'none';
+            });
+        }
+
+        function togglePanel() {
+            const panel = document.getElementById('info-panel');
+            // Check if the panel is currently hidden (moved 100% to the right)
+            const isHidden = panel.style.transform === 'translateX(100%)';
+            const btn = document.getElementById('toggle-panel-btn');
+
+            if (isHidden) {
+                panel.style.transform = 'translateX(0)'; // Move back to visible
+                btn.textContent = '패널 숨기기';
+            } else {
+                panel.style.transform = 'translateX(100%)'; // Move out of view
+                btn.textContent = '패널 보이기';
+            }
+        }
+        
+        function toggleGrid() {
+            const isVisible = gridHelperXZ.visible;
+            gridHelperXZ.visible = !isVisible;
+            gridHelperXY.visible = !isVisible;
+            gridHelperYZ.visible = !isVisible;
+            
+            const btn = document.getElementById('toggle-grid-btn');
+            btn.textContent = isVisible ? '격자 보이기' : '격자 숨기기';
+            
+            // Axis labels update via animate loop, but we ensure the visibility state is reflected immediately
+            document.getElementById('label-container').style.display = isVisible ? 'none' : 'block';
+        }
+
+
+        function resetView() {
+            controls.reset();
+            camera.position.copy(initialCameraPosition);
+            // Look at the center of the scene (approx 5, 0, 5 where the screen is)
+            controls.target.set(5, 0, 5); 
+            controls.update();
+        }
+
+        function calculateProjection(C, P, coeffs) {
+            const { a, b, c, d } = coeffs;
+            
+            const dp_x = P.x - C.x; 
+            const dp_y = P.y - C.y; 
+            const dp_z = P.z - C.z; 
+            
+            // Denominator: 방향 벡터와 평면 법선 벡터의 내적
+            const denominator = a * dp_x + b * dp_y + c * dp_z;
+            
+            // Numerator: 카메라 위치 C를 평면 방정식에 대입한 값의 음수
+            const numerator = a * C.x + b * C.y + c * C.z + d;
+
+            if (denominator === 0) return { t: Infinity, Ps: null }; 
+
+            const t = -numerator / denominator;
+
+            // Ps = C + t * (P - C)
+            const Ps = new THREE.Vector3(
+                C.x + t * dp_x,
+                C.y + t * dp_y,
+                C.z + t * dp_z
+            );
+
+            return { t, Ps };
+        }
+
+        function updateProjection(isDragging = false) {
+            const P = pointP.position;
+            const C = cameraCoords;
+            const result = calculateProjection(C, P, planeCoeff);
+            const { t, Ps } = result;
+
+            // Update line geometry (C에서 P까지)
+            const positions = line.geometry.attributes.position.array;
+            positions[0] = C.x; positions[1] = C.y; positions[2] = C.z; // Update C position
+            positions[3] = P.x; positions[4] = P.y; positions[5] = P.z;
+            line.geometry.attributes.position.needsUpdate = true;
+            
+            let tValueText, projectedCoordsText;
+
+            if (Ps && isFinite(t)) {
+                pointPs.position.copy(Ps);
+
+                tValueText = t.toFixed(4); 
+                projectedCoordsText = `( ${Ps.x.toFixed(2)}, ${Ps.y.toFixed(2)} )`;
+            } else {
+                tValueText = "평행 또는 뒤에 있음";
+                projectedCoordsText = "투영 불가";
+                pointPs.position.set(1000, 1000, 1000); 
+            }
+            
+            document.getElementById('t-value').textContent = tValueText;
+            document.getElementById('camera-coords').textContent = `(${C.x.toFixed(2)}, ${C.y.toFixed(2)}, ${C.z.toFixed(2)})`;
+            document.getElementById('point-coords').textContent = `(${P.x.toFixed(2)}, ${P.y.toFixed(2)}, ${P.z.toFixed(2)})`;
+            document.getElementById('projected-coords').textContent = projectedCoordsText;
+            
+            // Update input fields for P only when dragging
+            if (isDragging) {
+                document.getElementById('input-x').value = P.x.toFixed(2);
+                document.getElementById('input-y').value = P.y.toFixed(2);
+                document.getElementById('input-z').value = P.z.toFixed(2);
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            updateAxisLabels(); // Update axis labels position every frame
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
