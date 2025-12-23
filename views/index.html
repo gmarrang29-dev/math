@@ -14,33 +14,50 @@
 </div>
 
 {% block best_content %}
-    <div class="post-list">
-        {% if list %}
-            {% for item in list %}
-            <div class="post-item text-box">
-                <h3>{{ item.title }}</h3>
-                
-                <p class="index-contents">{{ item.contents | safe }}</p>
-                
-                <div class="post-info" style="font-size: 0.8em; color: #888; margin-top: 10px;">
-                    <span>작성자: <strong>{{ item.author if item.author else "익명" }}</strong></span> | 
-                </div>
-                <hr>
+    {% if list %}
+        {% for data in list %}
+        <div class="text-box">
+            <p><strong>{{ data.title }}</strong></p>
+            <p class="index-contents">{{ data.contents | safe }}</p>
+            
+            <div class="post-info" style="font-size: 0.85em; color: #777; margin-top: 5px;">
+                <span>작성자: {{ data.author if data.author else "익명" }}</span> | 
+                <span>날짜: {{ data.date }}</span>
             </div>
+        </div>
+        {% endfor %}
+    <div class="pagination" style="text-align: center; margin-top: 20px;">
+            {% for i in range(1, totalPages + 1) %}
+                    [{{ i }}]
+                </a>
             {% endfor %}
-        {% else %}
-            <p>작성된 글이 없습니다.</p>
-        {% endif %}
-    </div>
+        </div>
+    {% else %}
+        <p>작성된 글이 없습니다.</p>
+    {% endif %}
 {% endblock %}
 
 {% block fest_content %}
     {% if list %}
         {% for data in list %}
         <div class="text-box">
-            <p>{{ data.title }}</p>
+            <p><strong>{{ data.title }}</strong></p>
             <p class="index-contents">{{ data.contents | safe }}</p>
+
+            <div class="post-info" style="font-size: 0.85em; color: #777; margin-top: 5px;">
+                <span>작성자: {{ data.author if data.author else "익명" }}</span> | 
+                <span>날짜: {{ data.date }}</span>
+            </div>
         </div>
         {% endfor %}
+
+        <div class="pagination" style="text-align: center; margin-top: 20px;">
+            {% for i in range(1, totalPages + 1) %}
+                    [{{ i }}]
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>작성된 글이 없습니다.</p>
     {% endif %}
 {% endblock %}
