@@ -109,14 +109,29 @@ app.get('/', async function(req , res){
         datas = JSON.parse(fileData);
     }
     
-    const postsFromDB = await Post.find(); 
+    // 페이지 번호 가져오기 (req.query.page 활용)
+    const page = parseInt(req.query.page) || 1; // 현재 페이지 번호 (없으면 1)
+    const perPage = 10; // 한 페이지에 보여줄 글 개수
+
+    // 전체 글 개수를 알아야 페이지 번호를 만듭니다.
+    const totalPosts = await Post.countDocuments();
+    const totalPages = Math.ceil(totalPosts / perPage);
+
+    // DB에서 해당 페이지의 글만 가져옵니다. (최신순 정렬 추가)
+    // .skip()과 .limit()이 정확히 들어가야 페이지가 넘어갑니다.
+    const postsFromDB = await Post.find()
+        .sort({ _id: -1 }) // 최신글이 위로 오게 정렬
+        .skip((page - 1) * perPage) // 중요: 앞 페이지 글 건너뛰기 로직
+        .limit(perPage); // 중요: 10개만 가져오기
 
     res.render('index.html' , { 
-        list: postsFromDB, // 이제 화면에 DB 데이터를 뿌려줍니다!
-        user: req.session.user
+        list: postsFromDB, 
+        user: req.session.user,
+        currentPage: page,
+        totalPages: totalPages
     });
 });
-
+    
 
 app.get('/write',function(req,res){
     res.render('write.html')
@@ -136,7 +151,7 @@ app.post('/write',async function(req, res){
         datas.push({
             'title' : title,
             'contents' : contents,
-            'author' : req.session.user ? req.session.user.name : "익명", // 이 줄만 추가!
+           'author' : req.session.user ? req.session.user.name : "익명", // 이 줄만 추가! */
         });
         // JSON에 저장
         fs.writeFileSync(filePath, JSON.stringify(datas, null, 2));
@@ -167,6 +182,17 @@ app.get('/test',function(req , res){
 app.get('/login',function(req,res){
     res.sendFile(__dirname + '/login/login.html')
 })
+
+// 게스트 로그인 라우트
+app.get('/login/guest', (req, res) => {
+    // 세션에 게스트 정보 강제 저장
+    req.session.user = {
+        name: "게스트",
+        email: "guest@example.com",
+        picture: "" // 빈 이미지 처리
+    };
+    res.redirect('/'); // 메인으로 이동
+});
 
 app.get('/logout', (req, res) => {
     req.session.destroy();
