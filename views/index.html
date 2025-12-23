@@ -25,12 +25,13 @@
             </div>
         </div>
         {% endfor %}
-    <div class="pagination" style="text-align: center; margin-top: 20px;">
-            {% for i in range(1, totalPages + 1) %}
-                    [{{ i }}]
-                </a>
-            {% endfor %}
-        </div>
+<div class="pagination" style="text-align: center; margin-top: 20px; padding: 10px;">
+     {% for i in range(1, totalPages + 1) %}
+        <a href="/?page={{ i }}" style="margin: 0 8px; text-decoration: none; font-size: 1.2em; font-weight: bold; {% if i == currentPage %} color: red; {% else %} color: blue; {% endif %}">
+            [{{ i }}]
+        </a>
+    {% endfor %}
+</div>
     {% else %}
         <p>작성된 글이 없습니다.</p>
     {% endif %}
@@ -49,12 +50,13 @@
         </div>
         {% endfor %}
 
-        <div class="pagination" style="text-align: center; margin-top: 20px;">
-            {% for i in range(1, totalPages + 1) %}
-                    [{{ i }}]
-                </a>
-            {% endfor %}
-        </div>
+<div class="pagination" style="text-align: center; margin-top: 20px; padding: 10px;">
+    {% for i in range(1, totalPages + 1) %}
+        <a href="/?page={{ i }}" style="margin: 0 8px; text-decoration: none; font-size: 1.2em; font-weight: bold; {% if i == currentPage %} color: red; {% else %} color: blue; {% endif %}">
+            [{{ i }}]
+        </a>
+    {% endfor %}
+</div>
     {% else %}
         <p>작성된 글이 없습니다.</p>
     {% endif %}
