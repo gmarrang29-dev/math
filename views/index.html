@@ -19,7 +19,7 @@
     {% if list %}
         {% for data in list %}
         <div class="text-box">
-            <p>{{ data.title }}</p>
+            <p class="index-title"> {{ data.title }}</p>
             <p class="index-contents">{{ data.contents | safe }}</p>
         </div>
         {% endfor %}
@@ -32,7 +32,7 @@
     {% if list %}
         {% for data in list %}
         <div class="text-box">
-            <p>{{ data.title }}</p>
+            <p class="index-title" >{{ data.title }}</p>
             <p class="index-contents">{{ data.contents| safe }}</p>
         </div>
         {% endfor %}
