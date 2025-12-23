@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', function() {
     // /write로 이동
     document.querySelector('.write-button').addEventListener('click', function() {
