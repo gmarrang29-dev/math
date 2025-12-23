@@ -92,11 +92,7 @@ app.post('/auth/google', async (req, res) => {
 app.listen(3000, function(){
     console.log('listen in port 3000')
 });
-const PORT = process.env.PORT || 3000; 
 
-app.listen(PORT, '0.0.0.0', function(){
-    console.log(`서버가 가동되었습니다. 포트: ${PORT}`);
-});
 //누군가가 /a로 들어가면 a에 관한 정보를 띄워주자
 app.get('/hello', function( req , res){
     res.send('안녕??')
@@ -108,15 +104,13 @@ app.get('/', async function(req , res){
     const postsFromDB = await Post.find(); 
 
     res.render('index.html' , { 
+        list: datas,
+        user: req.session.user,
+
         list: postsFromDB, // 이제 화면에 DB 데이터를 뿌려줍니다!
         user: req.session.user
     });
 });
-
-    res.render('index.html' , { 
-        list: datas,
-        user: req.session.user
-    });
 
 
 app.get('/write',function(req,res){
