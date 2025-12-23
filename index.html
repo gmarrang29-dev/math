@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <link rel="stylesheet" href="index.css">
+{% endblock %}
+
+<div class="user-menu">
+    {% if user %}
+        <span>{{ user.name }}님 환영합니다!</span>
+        <a href="/logout" class="login-button">로그아웃</a>
+    {% else %}
+        <button class="login-button" onclick="location.href='/login'">로그인</button>
+    {% endif %}
+</div>
+
+{% block best_content %}
+    {% if list %}
+        {% for data in list %}
+        <div class="text-box">
+            <p><strong>{{ data.title }}</strong></p>
+            <p class="index-contents">{{ data.contents | safe }}</p>
+            
+            <div class="post-info" style="font-size: 0.85em; color: #777; margin-top: 5px;">
+                <span>작성자: {{ data.author if data.author else "익명" }}</span> | 
+            </div>
+        </div>
+        {% endfor %}
+    <div class="pagination" style="text-align: center; margin-top: 20px;">
+            {% for i in range(1, totalPages + 1) %}
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>작성된 글이 없습니다.</p>
+    {% endif %}
+{% endblock %}
+
+{% block fest_content %}
+    {% if list %}
+        {% for data in list %}
+        <div class="text-box">
+            <p><strong>{{ data.title }}</strong></p>
+            <p class="index-contents">{{ data.contents | safe }}</p>
+
+            <div class="post-info" style="font-size: 0.85em; color: #777; margin-top: 5px;">
+                <span>작성자: {{ data.author if data.author else "익명" }}</span> | 
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="pagination" style="text-align: center; margin-top: 20px;">
+            {% for i in range(1, totalPages + 1) %}
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>작성된 글이 없습니다.</p>
+    {% endif %}
+{% endblock %}
