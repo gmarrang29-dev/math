@@ -1,0 +1,58 @@
+body{
+    text-align: center;
+    margin-top: 2cm;
+}
+.container{
+    border: 1px solid black;
+    display: inline-block;
+    padding: 15px;
+    border-radius: 7px;
+    width: 10cm;
+    height: 8cm;    
+}
+.gg{
+    width: 7cm;
+    height: 1.5cm;
+    background-color:#84bdfa;
+    color: black;
+    font-weight: bold;
+    border-radius: 10px;
+    font-size: large;
+    cursor : pointer;
+
+}
+
+.guest{
+    width: 7cm;
+    height: 1.5cm;
+    background-color: #ffff;
+    color: black;
+    font-weight: bold;
+    border-radius: 10px;
+    font-size: large;
+    cursor : pointer;
+
+}
+
+.close{
+    text-decoration: none;
+    color: black;
+    border: none;
+}
+.cc{
+    margin-top: 20px;
+    padding: 1px;
+    font-weight: bold;
+
+}
+.or{
+    margin: 9px 2px;
+    font-weight: bold;
+}
+.main-button{
+    background-color: #fff;
+    outline-width: 0;
+    font-size: larger;
+    font-weight: bold;
+    cursor : pointer;
+}
