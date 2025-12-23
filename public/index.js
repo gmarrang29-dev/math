@@ -1,14 +1,3 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // /write로 이동
-    document.querySelector('.write-button').addEventListener('click', function() {
-        window.location.href = '/write'; 
-    });
-});
-
-    // /ㅣlogin로 이동
-    document.querySelector('.login-button').addEventListener('click', function() {
-        window.location.href = '/login'; 
-});
 
 const schedules = {
   "2025-12-19": [
@@ -76,3 +65,16 @@ if (schedules[todayKey]) {
     <p>오늘은 등록된 일정이 없습니다.</p>
   `;
 }
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    // /write로 이동
+    document.querySelector('.write-button').addEventListener('click', function() {
+        window.location.href = '/write'; 
+    });
+});
+
+    // /ㅣlogin로 이동
+    document.querySelector('.login-button').addEventListener('click', function() {
+        window.location.href = '/login'; 
+});
