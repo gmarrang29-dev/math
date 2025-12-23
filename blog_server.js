@@ -92,7 +92,11 @@ app.post('/auth/google', async (req, res) => {
 app.listen(3000, function(){
     console.log('listen in port 3000')
 });
+const PORT = process.env.PORT || 3000; 
 
+app.listen(PORT, '0.0.0.0', function(){
+    console.log(`서버가 가동되었습니다. 포트: ${PORT}`);
+});
 //누군가가 /a로 들어가면 a에 관한 정보를 띄워주자
 app.get('/hello', function( req , res){
     res.send('안녕??')
