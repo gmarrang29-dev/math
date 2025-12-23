@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta name="google-site-verification" content="eoqpAFoqhaIawQj29-ATXQHIu1qaqXdL9J5lFqQw3yk" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nsdgblog</title>
+     <link rel="stylesheet" href="style.css"> {% block head %}{% endblock %}
+</head>
+<body>
+    <!--공통된 요소-->
+    <div class="grid-container">
+    <header>
+    <div class="container">
+
+         <a href="#" class="tdn">
+                <span class="dgblog">대건블로그</span>
+            </a>
+
+        <div class="search-box">
+            <form class="search-container">
+                <label for="type"></label>
+                <select name="type"  id="type">
+                    <option value="author">작성자</option>
+                    <option value="topic">글</option>
+                </select>
+                    <input class="search search-input" type="text" placeholder="글을 검색해주세요">
+                <button class="search-button">검색</button>
+            </form>
+            
+        </div>
+    <button class="login-button">로그인</button>
+</a>
+        </div>
+</header>
+<main>      
+    <div class="container">
+        <section class="post-section">
+            <p class="aa">인기 글</p>
+            <ul id="popular-post-list" class="post-list">
+        <!-- 바뀌는 요소-->
+                         <div class="best">
+                            {%block best_content%}
+                            {%endblock%}
+                        </div>
+            </ul>
+        </section>
+        <!-- 공통된 요소 -->
+        <section class="post-section" style="margin-top: 40px;">
+            <p class="recent"  >최근 글</p>
+        <!--바뀌는 요소-->
+            <ul id="recent-post-list" class="post-list">
+                <li>
+                 <div class="ex-recent">
+                           {%block fest_content%}
+                           {%endblock%}
+                            </div>
+                </li>
+            </ul>
+        </section>
+    </div>
+    <!-- 공통된 요소 -->
+<template id="post-item-template">
+    <li class="post-item">
+        <div class="post-meta">
+            <span class="author"></span> |
+            <span class="date"></span>
+        </div>
+        <a href="#" class="post-title-link" data-post-id="">
+        </a>
+        <div class="post-content-summary">
+        </div>
+    </li>
+</template>
+     <div class="main-actions">
+            <button class="write-button">글쓰기</button>
+     </div>  
+</main> 
+<aside>
+    <div class="sns-1" >
+      <p class="sns" >학교 SNS</p> 
+    </div>
+    <br>
+    <a href="https://www.youtube.com/@daegongehs" class="button1">
+  <img src="../image/a.png" alt="대건고 유튜브">
+  <span>대건고 유튜브</span>
+</a>
+ <a href="https://www.youtube.com/@daegongehs" class="button2">
+  <img src="../image/b.png" alt="대건고 페이스북">
+  <span>대건고 페이스북</span>
+</a>
+ <a href="https://www.youtube.com/@daegongehs" class="button3">
+  <img src="../image/c.png" alt="대건고 인스타그램">
+  <span>대건고 인스타그램</span>
+</a>
+<!--여기부터 일정표-->
+<p class="ill2">오늘의 일정표</p>
+<div class="ill">
+    <p class="date1"> 1-6 학급미사</p>
+    <p class="date2">1학년 자감:이지연</p>
+    <p class="date3">2학년 자감:이지연</p>
+</div>
+</aside>
+
+<footer>
+    <div class="container">
+        <p>© 2025 DART. All rights reserved.</p>
+        
+    </div> 
+</footer>
+<script src="index.js"></script>
+</html>

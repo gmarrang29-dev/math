@@ -1,0 +1,42 @@
+
+{% extends 'base.html' %}
+
+{% block head %}
+    <link rel="stylesheet" href="index.css">
+{% endblock %}
+
+<div class="user-menu">
+    {% if user %}
+        <img src="{{ user.picture }}" style="width:30px; border-radius:50%;">
+        <span>{{ user.name }}님 환영합니다!</span>
+        <a href="/logout" class="login-button">로그아웃</a>
+    {% else %}
+        <button class="login-button" onclick="location.href='/login'">로그인</button>
+    {% endif %}
+</div>
+
+{% block best_content %}
+    {% if list %}
+        {% for data in list %}
+        <div class="text-box">
+            <p>{{ data.title }}</p>
+            <p class="index-contents">{{ data.contents | safe }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p> 작성된 글이 없습니다.</p>
+    {% endif %}
+{% endblock %}
+
+{% block fest_content %}
+    {% if list %}
+        {% for data in list %}
+        <div class="text-box">
+            <p>{{ data.title }}</p>
+            <p class="index-contents">{{ data.contents| safe }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p> 작성된 글이 없습니다.</p>
+    {% endif %}
+{% endblock %}

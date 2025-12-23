@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+      <link rel="stylesheet" href="write.css" />
+      <link rel="stylesheet" href="https://uicdn.toast.com/editor/latest/toastui-editor.min.css" />
+      <link rel="stylesheet" href="https://uicdn.toast.com/editor-plugin-code-syntax-highlight/latest/toastui-editor-plugin-code-syntax-highlight.min.css" />
+      <link rel="stylesheet" as="style" crossorigin 
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+</head>
+<body>
+    <h1>글 작성</h1>
+    <button class="main-button">돌아가기</button>
+<form action="/write" id="write-form" method="post">
+        <div class="container">
+        <div class="mainname">
+            <div class="text-range">
+            <input name="title" class="title" placeholder="  글의 제목을 입력하세요                                                                                                                         " type="text">
+            </div>
+        </div>
+        <div class="content">
+            <div id="editor"></div>
+            <input type="hidden" name="contents" id="contents-hidden">
+        </div>
+    <div class="button-group">
+        <div class="enter-btn">
+        <button type="submit" value="글 작성 완료" class="enter"> 글 작성</button>
+        <button type="submit" value="글 임시 저장됨" class="store"> 임시 저장</button>
+        </div>
+    </div>
+        </div>
+
+    </form>
+
+    <script src="https://uicdn.toast.com/editor/latest/toastui-editor-all.min.js"></script>
+    
+    <script src="https://uicdn.toast.com/editor-plugin-code-syntax-highlight/latest/toastui-editor-plugin-code-syntax-highlight-all.min.js"></script>
+
+    <script src="editor.js"></script>
+</body>
+</html>
