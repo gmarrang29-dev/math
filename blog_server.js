@@ -1,5 +1,6 @@
 //mongoDB 연결
 const mongoose = require('mongoose')
+// Render 배포를 위해 포트 설정을 유연하게 바꿉니다. (아래 app.listen 참고)
 mongoose.connect('mongodb+srv://servermaster:c0679577@blogcluster.kdlcehw.mongodb.net/').then(() => console.log('connected')).catch(() => console.log('failed'))            
 
 //mongoDB
@@ -89,8 +90,10 @@ app.post('/auth/google', async (req, res) => {
 });
 
 //기본 시작코드(이정도는 외워라)
-app.listen(3000, function(){
-    console.log('listen in port 3000')
+// Render 배포 환경을 위해 포트를 변수화합니다.
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', function(){
+    console.log(`listen in port ${PORT}`)
 });
 
 //누군가가 /a로 들어가면 a에 관한 정보를 띄워주자
@@ -99,14 +102,16 @@ app.get('/hello', function( req , res){
 });
 
 app.get('/', async function(req , res){
-    const fileData = fs.readFileSync(filePath)
-    const datas = JSON.parse(fileData);
+    // 파일 읽기 시 에러 방지를 위해 체크 추가
+    let datas = [];
+    if (fs.existsSync(filePath)) {
+        const fileData = fs.readFileSync(filePath);
+        datas = JSON.parse(fileData);
+    }
+    
     const postsFromDB = await Post.find(); 
 
     res.render('index.html' , { 
-        list: datas,
-        user: req.session.user,
-
         list: postsFromDB, // 이제 화면에 DB 데이터를 뿌려줍니다!
         user: req.session.user
     });
@@ -123,21 +128,21 @@ app.post('/write',async function(req, res){
     const date = req.body.date; 
 
     //우선 data.json에 글 저장
-    const fileData = fs.readFileSync(filePath);
-    const datas = JSON.parse(fileData);
-    console.log(datas);
+    if (fs.existsSync(filePath)) {
+        const fileData = fs.readFileSync(filePath);
+        const datas = JSON.parse(fileData);
+        
+        //req를 js에 저장(임시)
+        datas.push({
+            'title' : title,
+            'contents' : contents,
+            'author' : req.session.user ? req.session.user.name : "익명", // 이 줄만 추가!
+        });
+        // JSON에 저장
+        fs.writeFileSync(filePath, JSON.stringify(datas, null, 2));
+    }
 
-    //req를 js에 저장(임시)
-    datas.push({
-        'title' : title,
-        'contents' : contents,
-        'author' : req.session.user ? req.session.user.name : "익명", // 이 줄만 추가!
-    });
-    // JSON에 저장
-    //들여쓰기 1
-    fs.writeFileSync(filePath, JSON.stringify(datas));
-
-try {
+    try {
         const newPost = new Post({
             title: title,
             contents: contents,
@@ -150,10 +155,10 @@ try {
         console.error('MongoDB 저장 실패:', error);
     }
 
+    // [수정] 응답은 한 번만 보내야 502 에러가 안 납니다! redirect만 남깁니다.
     res.redirect('/');
-    res.render('detail',{'detail': { title: title, contents : contents }} );
     
-})
+});
 
 app.get('/test',function(req , res){
     res.render('test.html')
