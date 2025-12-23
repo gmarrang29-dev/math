@@ -113,7 +113,6 @@ app.get('/', async function(req , res){
     });
 });
 
-    console.log(datas)
     res.render('index.html' , { 
         list: datas,
         user: req.session.user
