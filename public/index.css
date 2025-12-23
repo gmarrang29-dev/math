@@ -2,23 +2,13 @@
       border-bottom: 1px solid gray
 }
 
-/* index.css 수정 */
-.index-contents {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;    /* 3줄까지만 보여줌 */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.6;
-    max-height: 4.8em;        /* line-height(1.6) * 3줄 */
-    word-break: break-all;
-    color: #444;
+.text-box{
+      border-bottom: 1px solid gray
 }
-
-/* 에디터에서 생성된 내부 태그(p, div 등)가 줄바꿈을 일으키지 않도록 처리 */
-.index-contents * {
-    display: inline !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    white-space: normal !important; /* nowrap이면 한 줄로 길게 늘어남 */
+.index-title{
+    font-size: x-large;
+    font-weight: bold;
+}
+.index-contents{
+    color: rgb(194, 190, 190);
 }
