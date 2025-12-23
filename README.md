@@ -1,2 +1,2 @@
-# math
-수학학
+# ds
+blog
